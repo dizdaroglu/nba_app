@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, Image, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Image, TextInput, Button, StyleSheet } from 'react-native';
 
 import Input from '../../utils/forms/input';
+import ValidationRules from '../../utils/forms/validationRules';
 
 export default class AuthForm extends Component {
 
@@ -29,7 +30,7 @@ export default class AuthForm extends Component {
                     minLength: 6
                 }
             },
-            confimPassword: {
+            confirmPassword: {
                 value: '',
                 valid: false,
                 type: 'textinput',
@@ -39,6 +40,14 @@ export default class AuthForm extends Component {
             }
         }
     }
+    changeFormType = () => {
+        const type = this.state.type;
+        this.setState({
+            type: type === 'Login' ? 'Register' : 'Login',
+            action: type === 'Login' ? 'Register' : ' Login',
+            actionMode: type === 'Login' ? 'I want to Login' : 'I want to register'
+        })
+    }
     updateInput = (name, value) => {
         this.setState({ hasErrors: false });
 
@@ -46,6 +55,14 @@ export default class AuthForm extends Component {
         formCopy[name].value = value;
 
         //rules
+        let rules = formCopy[name].rules;
+        let valid = ValidationRules(value, rules, formCopy);
+
+        console.log(valid)
+
+        formCopy[name].valid = valid;
+
+
         this.setState({
             form: formCopy
         })
@@ -62,8 +79,8 @@ export default class AuthForm extends Component {
             <Input
                 placeholder="Confirm your password"
                 placeholderTextColor="#cecece"
-                value={this.state.form.confimPassword.value}
-                type={this.state.form.confimPassword.type}
+                value={this.state.form.confirmPassword.value}
+                type={this.state.form.confirmPassword.type}
                 onChangeText={value => this.updateInput('confirmPassword', value)}
                 secureTextEntry
             // overrideStyle={}
@@ -95,6 +112,27 @@ export default class AuthForm extends Component {
 
                 {this.confirmPassword()}
                 {this.formHasErrors()}
+
+                <View style={{ marginTop: 20 }}>
+                    <View style={styles.button}>
+                        <Button
+                            title={this.state.action}
+                            onPress={this.submitUser}
+                        />
+                    </View>
+                    <View style={styles.button}>
+                        <Button
+                            title={this.state.actionMode}
+                            onPress={this.changeFormType}
+                        />
+                    </View>
+                    <View style={styles.button}>
+                        <Button
+                            title="I'll do it later"
+                            onPress={() => this.props.goNext()}
+                        />
+                    </View>
+                </View>
             </View>
         );
     }
@@ -111,5 +149,9 @@ const styles = StyleSheet.create({
         color: '#fff',
         textAlignVertical: 'center',
         textAlign: 'center'
+    },
+    button: {
+        marginBottom: 10,
+        marginTop: 10
     }
 })
