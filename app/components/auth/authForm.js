@@ -3,8 +3,13 @@ import { View, Text, Image, TextInput, Button, StyleSheet } from 'react-native';
 
 import Input from '../../utils/forms/input';
 import ValidationRules from '../../utils/forms/validationRules';
+import { connect } from 'react-redux';
+import { signUp, signIn } from '../../store/actions/user_actions';
+import { bindActionCreators } from 'redux';
 
-export default class AuthForm extends Component {
+import { setTokens } from '../../utils/misc';
+
+class AuthForm extends Component {
 
     state = {
         type: 'Login',
@@ -58,7 +63,6 @@ export default class AuthForm extends Component {
         let rules = formCopy[name].rules;
         let valid = ValidationRules(value, rules, formCopy);
 
-        console.log(valid)
 
         formCopy[name].valid = valid;
 
@@ -87,6 +91,50 @@ export default class AuthForm extends Component {
             />
             : null
     )
+    manageAccess = () => {
+        if (!this.props.User.auth.uid) {
+            this.setState({ hasErrors: true })
+        } else {
+            setTokens(this.props.User.auth, () => {
+                this.setState({ hasErrors: false })
+                this.props.goNext();
+            })
+        }
+    }
+    submitUser = () => {
+        let isFormValid = true;
+        let formToSubmit = {};
+        const formCopy = this.state.form;
+
+        for (let key in formCopy) {
+            if (this.state.type === 'Login') {
+                //Login
+                if (key !== 'confirmPassword') {
+                    isFormValid = isFormValid && formCopy[key].valid;
+                    formToSubmit[key] = formCopy[key].value;
+                }
+            } else {
+                //register
+                isFormValid = isFormValid && formCopy[key].valid;
+                formToSubmit[key] = formCopy[key].value;
+            }
+        }
+        if (isFormValid) {
+            if (this.state.type === 'Login') {
+                this.props.signIn(formToSubmit).then(() => {
+                    this.manageAccess()
+                })
+            } else {
+                this.props.signUp(formToSubmit).then(() => {
+                    this.manageAccess()
+                })
+            }
+        } else {
+            this.setState({
+                hasErrors: true
+            })
+        }
+    }
     render() {
         return (
             <View>
@@ -155,3 +203,12 @@ const styles = StyleSheet.create({
         marginTop: 10
     }
 })
+const mapStateToProps = state => {
+    return {
+        User: state.User
+    }
+}
+const mapDispatchToProps = dispatch => {
+    return bindActionCreators({ signIn, signUp }, dispatch)
+}
+export default connect(mapStateToProps, mapDispatchToProps)(AuthForm)

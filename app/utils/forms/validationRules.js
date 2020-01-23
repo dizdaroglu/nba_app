@@ -49,7 +49,6 @@ const validateMaxLength = (value, ruleValue) => {
     return false;
 }
 const validateConfirmPass = (confirmPass, pass) => {
-    console.log("pass", pass)
     return confirmPass === pass
 }
 export default validation

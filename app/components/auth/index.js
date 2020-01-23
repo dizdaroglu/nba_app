@@ -2,15 +2,36 @@ import React, { Component } from 'react';
 import { View, Text, ScrollView, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import AuthLogo from './authLogo';
 import AuthForm from './authForm';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { getTokens, setTokens } from '../../utils/misc';
+import { autoSignIn } from '../../store/actions/user_actions';
 
-export default class AuthComponent extends Component {
+class AuthComponent extends Component {
 
     state = {
-        loading: false
+        loading: true
     }
 
     goNext = () => {
         this.props.navigation.navigate('App')
+    }
+    componentDidMount() {
+        getTokens((value) => {
+            if (value[0][1] === null) {
+                this.setState({ loading: false })
+            } else {
+                this.props.autoSignIn(value[1][1]).then(() => {
+                    if (!this.props.User.auth.token) {
+                        this.setState({ loading: false })
+                    } else {
+                        setTokens(this.props.User.auth, () => {
+                            this.goNext();
+                        })
+                    }
+                })
+            }
+        })
     }
     render() {
         if (this.state.loading) {
@@ -47,3 +68,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 })
+
+const mapStateToProps = state => {
+    return {
+        User: state.User
+    }
+}
+const mapDispatchToProps = dispatch => {
+    return bindActionCreators({ autoSignIn }, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AuthComponent)
