@@ -11,6 +11,8 @@ const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const createStoreWithMiddleware = createStore(reducers, composeEnhancers(
     applyMiddleware(promiseMiddleware)
 ))
+
+console.disableYellowBox = true;
 const appRedux = () => (
     <Provider store={createStoreWithMiddleware}>
         <App />
